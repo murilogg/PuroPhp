@@ -8,6 +8,26 @@
 
 require_once ('AutoPHP\autoload.php');
 
+$ordem = $_GET['ordem'];
+$ordem = (isset($ordem) && !empty($ordem)) ? $ordem : 'ASC';
+
+use Cliente\DataBase\Connect;
+use Cliente\Tipo\ClientePF;
+use Cliente\Tipo\ClientePJ;
+use Cliente\Data\DadosCliente;
+
+$db = new Connect();
+$pdo = $db->dbConnect();
+
+$dadosCliente = new DadosCliente($pdo);
+
+$dbClientes = $dadosCliente->getClientes($ordem);
+$clientes = [];
+
+foreach ($dbClientes as $cliente){
+    $clientes[] = $cliente['tipoCliente'] == "PF" ? new ClientePF($cliente['id'], $cliente['nome'], $cliente['numId'], $cliente['importancia'], $cliente['endereco']) : new ClientePJ($cliente['id'], $cliente['nome'], $cliente['numId'], $cliente['importancia'], $cliente['endereco'], $cliente['enderecoCobranca']);
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -44,6 +64,10 @@ require_once ('AutoPHP\autoload.php');
                 <?php endif; ?>
             <?php endfor; ?>
         </td>
+        <td><a href="detalhes.php?id=<?php echo $cliente->getId();?>" title="Clique para visualizar"><?php echo $cliente->getNome(); ?></a></td>
+        <td><?php echo $cliente->getTipoCliente()=="PF" ? $cliente->getCpf() : $cliente->getCnpj(); ?></td>
+        <td><?php echo $cliente->getEndereco(); ?></td>
+        <td><?php echo $cliente->getTipoCliente()=="PJ" ? $cliente->getEnderecoCobranca() : ''; ?></td>
     </tr>
     <?php endforeach; ?>
     </tbody>
